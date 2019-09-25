@@ -23,40 +23,47 @@ db.on("error", function(error) {
 // SCRAPE
 console.log("\n***********************************\n" +
             "Grabbing every article name and link\n" +
-            "from NYT's articles:" +
+            "from NYT's articles and putting them into mongodb:" +
             "\n***********************************\n");
 
+            // Scrape data from one site and place it into the mongodb db
+app.get("/scrape", function(req, res) {
 // Making a request via axios for reddit's "webdev" board. We are sure to use old.reddit due to changes in HTML structure for the new reddit. The page's Response is passed as our promise argument.
-axios.get("https://www.nytimes.com/section/world/americas").then(function(response) {
+    axios.get("https://www.nytimes.com/section/world/americas").then(function(response) {
 
-  // Load the Response into cheerio and save it to a variable
-  // '$' becomes a shorthand for cheerio's selector commands, much like jQuery's '$'
-  var $ = cheerio.load(response.data);
+        // Load the Response into cheerio and save it to a variable
+        // '$' becomes a shorthand for cheerio's selector commands, much like jQuery's '$'
+        var $ = cheerio.load(response.data);
+        $("h2.css-1j9dsxy").each(function(i, element) {
+        // Save the text of the element in a "title" variable
+        var title = $(element).text();
+        // In the currently selected element, look at its child elements (i.e., its a-tags),
+        // then save the values for any "href" attributes that the child elements may have
+        var link = $(element).parent().attr("href");
 
-  // An empty array to save the data that we'll scrape
-  var results = [];
-
-  // With cheerio, find each p-tag with the "title" class
-  // (i: iterator. element: the current element)
-  $("h2.css-1j9dsxy").each(function(i, element) {
-
-    // Save the text of the element in a "title" variable
-    var title = $(element).text();
-
-    // In the currently selected element, look at its child elements (i.e., its a-tags),
-    // then save the values for any "href" attributes that the child elements may have
-    var link = $(element).parent().attr("href");
-
-    // Save these results in an object that we'll push into the results array we defined earlier
-    results.push({
-      title: title,
-      link: link
+              // If this found element had both a title and a link
+            if (title && link) {
+                // Insert the data in the scrapedData db
+                db.nyt.insert({
+                title: title,
+                link: link
+                },
+                function(err, inserted) {
+                if (err) {
+                    // Log the error if one is encountered during the query
+                    console.log(err);
+                }
+                else {
+                    // Otherwise, log the inserted data
+                    console.log(inserted);
+          }
+        });
+      }
     });
-  });
 
-  // Log the results once you've looped through each of the elements found with cheerio
-  console.log(results);
-});
+    // Log the results once you've looped through each of the elements found with cheerio
+    console.log(results);
+    });
 
 
 // ROUTES
