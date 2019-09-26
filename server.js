@@ -11,10 +11,10 @@ const axios = require("axios");
 // const collections = ["articles"];
 
 // mongojs to hook database to the db variable
-const db = require("./models");
-const PORT = 3000;
+var db = require("./models");
+var PORT = process.env.PORT || 3000;
 
-const app = express();
+var app = express();
 
 // Configure middleware
 // Use morgan logger for logging requests
@@ -42,23 +42,26 @@ app.get("/scrape", function(req, res) {
         // Load the Response into cheerio and save it to a variable
         // '$' becomes a shorthand for cheerio's selector commands, much like jQuery's '$'
         var $ = cheerio.load(response.data);
-        $("h2.css-1j9dsxy").each(function(i, element) {
+        console.log($("li.css-ye6x8s").length)
+        $("li.css-ye6x8s").each(function(i, element) {
         // Save the text of the element in a "title" variable
         var result = {};
         
-        result.title = $(this).text();
+        result.title = $(this).children().find("h2").text();
         // In the currently selected element, look at its child elements (i.e., its a-tags),
         // then save the values for any "href" attributes that the child elements may have
-        result.link = $(this).parent().attr("href");
+        result.link = $(this).children().attr("href");
+        
+        console.log(result)
 
         // create a new Article
-        db.Article.create(result)
-        .then(function(dbArticle) {
-            console.log(dbArticle);
-        })
-        .catch(function(err) {
-            console.log(err)
-        });
+        // db.Article.create(result)
+        // .then(function(dbArticle) {
+        //     console.log(dbArticle);
+        // })
+        // .catch(function(err) {
+        //     console.log(err)
+        // });
         });
     
 
@@ -80,7 +83,8 @@ app.get("/articles", function(req, res) {
         res.json(err);
       });
   });
+});
 
 app.listen(PORT, function() {
     console.log("App running on port " + PORT + "!");
-  })});
+});
