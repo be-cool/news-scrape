@@ -50,18 +50,18 @@ app.get("/scrape", function(req, res) {
         result.title = $(this).children().find("h2").text();
         // In the currently selected element, look at its child elements (i.e., its a-tags),
         // then save the values for any "href" attributes that the child elements may have
-        result.link = $(this).children().attr("href");
+        result.link = $(this).find("a").attr("href");
         
         console.log(result)
 
         // create a new Article
-        // db.Article.create(result)
-        // .then(function(dbArticle) {
-        //     console.log(dbArticle);
-        // })
-        // .catch(function(err) {
-        //     console.log(err)
-        // });
+        db.Article.create(result)
+        .then(function(dbArticle) {
+            console.log(dbArticle);
+        })
+        .catch(function(err) {
+            console.log(err)
+        });
         });
     
 
